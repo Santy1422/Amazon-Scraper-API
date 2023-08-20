@@ -11,7 +11,7 @@ const {
 
 // Initialize app
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080;
 
 app.use(express.json()); // Allow app to parse json
 
@@ -26,19 +26,25 @@ app.get(ROOT, (req, res) => {
 });
 
 // Get Product Details
-app.get(PRODUCT_DETAILS, async (req, res) => {
-  // Get Id from params
-  const { productId } = req.params;
-  const { api_key } = req.query;
+app.post(PRODUCT_DETAILS, async (req, res) => {
+  const { productIds } = req.body;
+  const idsArray = Array.isArray(productIds) ? productIds : [productIds]; // Convertir a array si no lo es
+  let api_key = "abd4692c8c9b8700b935d228980df52b";
+  let productDetails = {}; // Objeto para almacenar los detalles de los productos
 
   try {
-    const response = await request(
-      `${returnScraperApiUrl(
-        api_key
-      )}&url=https://www.amazon.com/dp/${productId}`
-    );
+    for (const productId of idsArray) {
+      const response = await request(
+        `${returnScraperApiUrl(api_key)}&url=https://www.amazon.com/dp/${productId}`
+      );
 
-    res.json(JSON.parse(response));
+      const productDetail = JSON.parse(response);
+      productDetails[productId] = productDetail; // Agregar detalle al objeto usando el ID como clave
+    }
+
+    // Aquí puedes guardar el objeto productDetails en una base de datos u otro lugar según tus necesidades
+
+    res.json(productDetails);
   } catch (error) {
     res.json(error);
   }
