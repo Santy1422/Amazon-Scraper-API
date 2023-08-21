@@ -2,36 +2,20 @@ import React, { useState } from 'react';
 import axios from 'axios';
 
 const App = () => {
-  const [asinInput, setAsinInput] = useState([]);
+  const [asinInput, setAsinInput] = useState('');
   const [uploadedProducts, setUploadedProducts] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const handleAsinInputChange = (event) => {
-    setAsinInput([...asinInput, event.target.value]);
-  };
-
-  const handleFileUpload = (event) => {
-    const file = event.target.files[0];
-    const fileReader = new FileReader();
-
-    fileReader.onload = (e) => {
-      const content = e.target.result;
-      const asinArray = content
-        .split('\n')
-        .map(line => line.trim())
-        .filter(line => line !== ''); // Remove empty lines
-
-      setAsinInput(asinArray);
-    };
-
-    fileReader.readAsText(file);
+    setAsinInput(event.target.value);
   };
 
   const handleUpload = async () => {
     try {
       setLoading(true);
-      const response = await axios.post('http://localhost:3001/products', {
-        productIds: asinInput
+      const asinArray = asinInput.split(',').map(asin => asin.trim());
+      const response = await axios.post('https://amazon-scraper-api-production.up.railway.app', {
+        productIds: asinArray
       });
 
       console.log('Response from server:', response.data);
@@ -52,24 +36,21 @@ const App = () => {
         value={asinInput}
         onChange={handleAsinInputChange}
       />
-
-      <input
-        type="file"
-        accept=".xlsx, .xls"
-        onChange={handleFileUpload}
-      />
-
       <button onClick={handleUpload}>Upload</button>
-
+      
       {loading ? (
         <p>Loading...</p>
       ) : (
         <div>
           <h3>Uploaded Products:</h3>
           <ul>
-            {uploadedProducts.map((product, index) => (
+            {Object.values(uploadedProducts).map((product, index) => (
               <li key={index}>
-                <strong>Name:</strong> {product.name} | <strong>Stock:</strong> {product.hasStock ? 'In Stock' : 'Out of Stock'}
+                <strong>Name:</strong> {product.name} |{" "}
+                <strong>Stock:</strong>{" "}
+                {product.availability_status.includes("In Stock") ? "In Stock" : "Out of Stock"}
+                <br />
+                <strong>Description:</strong> {product.small_description}
               </li>
             ))}
           </ul>

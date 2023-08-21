@@ -8,6 +8,7 @@ const {
   PRODUCT_SEARCH,
   ROOT,
 } = require("./routes/routes");
+const cors = require("cors"); // Import the "cors" middleware
 
 // Initialize app
 const app = express();
