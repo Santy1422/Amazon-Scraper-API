@@ -2,42 +2,65 @@ import React, { useState } from 'react';
 import axios from 'axios';
 
 const App = () => {
-  const [file, setFile] = useState(null);
+  const [asinInput, setAsinInput] = useState([]);
   const [uploadedProducts, setUploadedProducts] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const handleFileChange = (event) => {
-    const selectedFile = event.target.files[0];
-    setFile(selectedFile);
+  const handleAsinInputChange = (event) => {
+    setAsinInput([...asinInput, event.target.value]);
+  };
+
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    const fileReader = new FileReader();
+
+    fileReader.onload = (e) => {
+      const content = e.target.result;
+      const asinArray = content
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line !== ''); // Remove empty lines
+
+      setAsinInput(asinArray);
+    };
+
+    fileReader.readAsText(file);
   };
 
   const handleUpload = async () => {
-    if (file) {
-      try {
-        setLoading(true);
-        const formData = new FormData();
-        formData.append('file', file);
+    try {
+      setLoading(true);
+      const response = await axios.post('http://localhost:3001/products', {
+        productIds: asinInput
+      });
 
-        const response = await axios.post('http://localhost:8080/products', formData); // Cambia la ruta a tu endpoint
-
-        console.log('Response from server:', response.data);
-        setUploadedProducts(response.data); // Actualiza el estado con los productos
-        setLoading(false);
-      } catch (error) {
-        console.error('Error uploading file:', error);
-        setLoading(false);
-      }
-    } else {
-      console.log('Please select a file to upload.');
+      console.log('Response from server:', response.data);
+      setUploadedProducts(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error uploading ASINs:', error);
+      setLoading(false);
     }
   };
 
   return (
     <div>
       <h2>Upload Products</h2>
-      <input type="file" accept=".xlsx, .xls" onChange={handleFileChange} />
+      <input
+        type="text"
+        placeholder="Enter ASINs separated by commas"
+        value={asinInput}
+        onChange={handleAsinInputChange}
+      />
+
+      <input
+        type="file"
+        accept=".xlsx, .xls"
+        onChange={handleFileUpload}
+      />
+
       <button onClick={handleUpload}>Upload</button>
-      
+
       {loading ? (
         <p>Loading...</p>
       ) : (

@@ -11,7 +11,8 @@ const {
 
 // Initialize app
 const app = express();
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3001;
+app.use(cors());
 
 app.use(express.json()); // Allow app to parse json
 
@@ -28,6 +29,7 @@ app.get(ROOT, (req, res) => {
 // Get Product Details
 app.post(PRODUCT_DETAILS, async (req, res) => {
   const { productIds } = req.body;
+  console.log(req.body)
   const idsArray = Array.isArray(productIds) ? productIds : [productIds]; // Convertir a array si no lo es
   let api_key = "abd4692c8c9b8700b935d228980df52b";
   let productDetails = {}; // Objeto para almacenar los detalles de los productos
