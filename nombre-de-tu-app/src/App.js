@@ -14,7 +14,7 @@ const App = () => {
     try {
       setLoading(true);
       const asinArray = asinInput.split(',').map(asin => asin.trim());
-      const response = await axios.post('https://amazon-scraper-api-production.up.railway.app', {
+      const response = await axios.post('https://amazon-scraper-api-production.up.railway.app/products', {
         productIds: asinArray
       });
 
