@@ -62,13 +62,13 @@ app.post(PRODUCT_DETAILS, async (req, res) => {
       const productDetail = JSON.parse(response);
         console.log(productDetail)
       // Obtener la información de disponibilidad de stock (esto puede variar según la estructura de la respuesta)
-      const hasStock = productDetail.product_information && productDetail.product_information.Availability === "In Stock";
+      const isInStock = productDetail.availability_status === 'In Stock' || productDetail.pricing !== '';
 
       // Crear y guardar el nuevo producto en la base de datos
       const newProduct = new Product({
         asin: productId,
         name: productDetail.name,
-        hasStock: hasStock
+        hasStock: isInStock
       });
 
       await newProduct.save();
