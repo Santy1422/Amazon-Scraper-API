@@ -49,35 +49,31 @@ app.get(ROOT, (req, res) => {
 app.post(PRODUCT_DETAILS, async (req, res) => {
   const { productIds } = req.body;
   const idsArray = Array.isArray(productIds) ? productIds : [productIds];
-  let api_key = "abd4692c8c9b8700b935d228980df52b";
-  let productDetails = {};
+  const api_key = "abd4692c8c9b8700b935d228980df52b";
+  const productDetails = {};
 
   try {
     for (const productId of idsArray) {
-      // Verificar si el producto ya existe en la base de datos
-      const existingProduct = await Product.findOne({ asin: productId });
+      // Hacer la solicitud a la API
+      const response = await request(
+        `${returnScraperApiUrl(api_key)}&url=https://www.amazon.com/dp/${productId}`
+      );
 
-      if (existingProduct) {
-        productDetails[productId] = existingProduct; // Agregar el producto existente al objeto
-      } else {
-        // Si no existe, hacer la solicitud a la API y guardar en la base de datos
-        const response = await request(
-          `${returnScraperApiUrl(api_key)}&url=https://www.amazon.com/dp/${productId}`
-        );
+      const productDetail = JSON.parse(response);
 
-        const productDetail = JSON.parse(response);
+      // Obtener la información de disponibilidad de stock (esto puede variar según la estructura de la respuesta)
+      const hasStock = productDetail.product_information && productDetail.product_information.Availability === "In Stock";
 
-        // Crear y guardar el nuevo producto en la base de datos
-        const newProduct = new Product({
-          asin: productId,
-          name: productDetail.name,
-          hasStock: productDetail.hasStock
-        });
+      // Crear y guardar el nuevo producto en la base de datos
+      const newProduct = new Product({
+        asin: productId,
+        name: productDetail.name,
+        hasStock: hasStock
+      });
 
-        await newProduct.save();
+      await newProduct.save();
 
-        productDetails[productId] = newProduct; // Agregar el nuevo producto al objeto
-      }
+      productDetails[productId] = newProduct; // Agregar el nuevo producto al objeto
     }
 
     res.json(productDetails);
@@ -85,6 +81,7 @@ app.post(PRODUCT_DETAILS, async (req, res) => {
     res.json(error);
   }
 });
+
 app.get('/products', async (req, res) => {
   try {
     const allProducts = await Product.find(); // Busca todos los productos en la base de datos
