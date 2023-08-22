@@ -162,7 +162,7 @@ export const Dashboard = () => {
     <p className="text-gray-80 text-white">{product.name}</p>
     <strong className="block font-semibold mt-2 text-gray-900">Stock:</strong>
     <p className="text-green-600">
-      {product.availability_status && product.availability_status.includes("In Stock")
+      {product.availability_status && product.availability_status.includes("In Stock") || product.hasStock
         ? "En stock"
         : "Sin stock"}
     </p>
