@@ -60,7 +60,7 @@ app.post(PRODUCT_DETAILS, async (req, res) => {
       );
 
       const productDetail = JSON.parse(response);
-
+        console.log(productDetail)
       // Obtener la información de disponibilidad de stock (esto puede variar según la estructura de la respuesta)
       const hasStock = productDetail.product_information && productDetail.product_information.Availability === "In Stock";
 
