@@ -43,34 +43,17 @@ export const Dashboard = () => {
     setSelectedFile(file);
   };
 
-  const handleExcelUpload = async () => {
+  const handleLoadAllProducts = async () => {
     try {
       setLoading(true);
-      const fileReader = new FileReader();
-      fileReader.onload = async (e) => {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: "array" });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-        const asinArray = rows.map(row => row[0]?.trim());
-        
-        // Send the POST request similar to the ASIN search request
-       const response = await axios.post('https://amazon-scraper-api-production.up.railway.app/products', {
-        productIds: asinArray
-      });
-
-      console.log('Response from server:', response.data);
+      const response = await axios.get('https://amazon-scraper-api-production.up.railway.app/products');
       setUploadedProducts(response.data);
       setLoading(false);
-      }
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error al cargar todos los productos:', error);
       setLoading(false);
     }
   };
-
 
   const fetchData = async (asinArray) => {
     try {
@@ -132,6 +115,12 @@ export const Dashboard = () => {
   >
     Buscar
   </button>
+  <button
+    onClick={handleLoadAllProducts}
+    className="bg-blue-500 text-white px-6 py-2 rounded-r hover:bg-blue-600 focus:outline-none focus:ring focus:border-blue-300"
+  >
+    Ver todos los productos
+  </button>
 </div>
 
           </>
@@ -141,11 +130,9 @@ export const Dashboard = () => {
             <input
               type="file"
               accept=".xlsx, .xls"
-              onChange={handleExcelFileUpload}
               className="mb-2"
             />
             <button
-              onClick={handleExcelUpload}
               className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring focus:border-blue-300"
             >
               Cargar archivo Excel

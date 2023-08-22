@@ -9,6 +9,8 @@ const {
   ROOT,
 } = require("./routes/routes");
 const cors = require("cors"); // Import the "cors" middleware
+const mongoose = require("mongoose");
+const Product = require("./routes/product");
 
 // Initialize app
 const app = express();
@@ -17,6 +19,23 @@ app.use(cors());
 
 app.use(express.json()); // Allow app to parse json
 
+// URL de conexión a tu base de datos MongoDB
+const dbURL = 'mongodb://mongo:oU3Pz6bWm15ikToup9QU@containers-us-west-208.railway.app:6188'; // Cambia esto según tu configuración
+
+// Conexión a la base de datos
+mongoose.connect(dbURL, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useCreateIndex: true,
+});
+
+const db = mongoose.connection;
+
+// Manejo de eventos de conexión y errores
+db.on("error", console.error.bind(console, "MongoDB connection error:"));
+db.once("open", () => {
+  console.log("Connected to MongoDB!");
+});
 const returnScraperApiUrl = (apiKey) =>
   `http://api.scraperapi.com?api_key=${apiKey}&autoparse=true`;
 
@@ -30,29 +49,51 @@ app.get(ROOT, (req, res) => {
 // Get Product Details
 app.post(PRODUCT_DETAILS, async (req, res) => {
   const { productIds } = req.body;
-  console.log(req.body)
-  const idsArray = Array.isArray(productIds) ? productIds : [productIds]; // Convertir a array si no lo es
+  const idsArray = Array.isArray(productIds) ? productIds : [productIds];
   let api_key = "abd4692c8c9b8700b935d228980df52b";
-  let productDetails = {}; // Objeto para almacenar los detalles de los productos
+  let productDetails = {};
 
   try {
     for (const productId of idsArray) {
-      const response = await request(
-        `${returnScraperApiUrl(api_key)}&url=https://www.amazon.com/dp/${productId}`
-      );
+      // Verificar si el producto ya existe en la base de datos
+      const existingProduct = await Product.findOne({ asin: productId });
 
-      const productDetail = JSON.parse(response);
-      productDetails[productId] = productDetail; // Agregar detalle al objeto usando el ID como clave
+      if (existingProduct) {
+        productDetails[productId] = existingProduct; // Agregar el producto existente al objeto
+      } else {
+        // Si no existe, hacer la solicitud a la API y guardar en la base de datos
+        const response = await request(
+          `${returnScraperApiUrl(api_key)}&url=https://www.amazon.com/dp/${productId}`
+        );
+
+        const productDetail = JSON.parse(response);
+
+        // Crear y guardar el nuevo producto en la base de datos
+        const newProduct = new Product({
+          asin: productId,
+          name: productDetail.name,
+          hasStock: productDetail.hasStock
+        });
+
+        await newProduct.save();
+
+        productDetails[productId] = newProduct; // Agregar el nuevo producto al objeto
+      }
     }
-
-    // Aquí puedes guardar el objeto productDetails en una base de datos u otro lugar según tus necesidades
 
     res.json(productDetails);
   } catch (error) {
     res.json(error);
   }
 });
-
+app.get('/products', async (req, res) => {
+  try {
+    const allProducts = await Product.find(); // Busca todos los productos en la base de datos
+    res.json(allProducts);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener los productos.' });
+  }
+});
 // Get Product Reviews
 app.get(PRODUCT_REVIEWS, async (req, res) => {
   // Get Id from params
