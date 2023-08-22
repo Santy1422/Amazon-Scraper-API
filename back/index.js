@@ -25,8 +25,7 @@ const dbURL = 'mongodb://mongo:oU3Pz6bWm15ikToup9QU@containers-us-west-208.railw
 // Conexión a la base de datos
 mongoose.connect(dbURL, {
   useNewUrlParser: true,
-  useUnifiedTopology: true,
-  useCreateIndex: true,
+
 });
 
 const db = mongoose.connection;
