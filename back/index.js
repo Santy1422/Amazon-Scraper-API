@@ -21,7 +21,7 @@ app.use(cors());
 app.use(express.json()); // Allow app to parse json
 
 // URL de conexión a tu base de datos MongoDB
-const dbURL = 'mongodb://mongo:oU3Pz6bWm15ikToup9QU@containers-us-west-208.railway.app:6188'; // Cambia esto según tu configuración
+const dbURL = 'mongodb://mongo:FYGRKATyIaErb2c0JAA4@containers-us-west-158.railway.app:7609'; // Cambia esto según tu configuración
 
 // Conexión a la base de datos
 mongoose.connect(dbURL, {
